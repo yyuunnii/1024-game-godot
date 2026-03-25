@@ -97,11 +97,10 @@ func move(direction: Vector2i) -> bool:
 	var moved = false
 	last_merge_score = 0
 	
+	# Create a fresh empty grid
 	var new_grid = []
 	for x in range(GRID_SIZE):
-		new_grid.append([])
-		for y in range(GRID_SIZE):
-			new_grid[x].append(grid[x][y])
+		new_grid.append([0, 0, 0, 0])
 	
 	if direction == Vector2i.LEFT:
 		for y in range(GRID_SIZE):
@@ -110,9 +109,10 @@ func move(direction: Vector2i) -> bool:
 				line.append(grid[x][y])
 			var result = process_line(line)
 			for x in range(GRID_SIZE):
-				if new_grid[x][y] != result[x]:
-					moved = true
 				new_grid[x][y] = result[x]
+				if new_grid[x][y] != grid[x][y]:
+					moved = true
+					
 	elif direction == Vector2i.RIGHT:
 		for y in range(GRID_SIZE):
 			var line = []
@@ -121,9 +121,10 @@ func move(direction: Vector2i) -> bool:
 			line.reverse()
 			var result = process_line(line)
 			for x in range(GRID_SIZE):
-				if new_grid[3-x][y] != result[x]:
-					moved = true
 				new_grid[3-x][y] = result[x]
+				if new_grid[3-x][y] != grid[3-x][y]:
+					moved = true
+					
 	elif direction == Vector2i.UP:
 		for x in range(GRID_SIZE):
 			var line = []
@@ -131,9 +132,10 @@ func move(direction: Vector2i) -> bool:
 				line.append(grid[x][y])
 			var result = process_line(line)
 			for y in range(GRID_SIZE):
-				if new_grid[x][y] != result[y]:
-					moved = true
 				new_grid[x][y] = result[y]
+				if new_grid[x][y] != grid[x][y]:
+					moved = true
+					
 	elif direction == Vector2i.DOWN:
 		for x in range(GRID_SIZE):
 			var line = []
@@ -142,9 +144,9 @@ func move(direction: Vector2i) -> bool:
 			line.reverse()
 			var result = process_line(line)
 			for y in range(GRID_SIZE):
-				if new_grid[x][3-y] != result[y]:
-					moved = true
 				new_grid[x][3-y] = result[y]
+				if new_grid[x][3-y] != grid[x][3-y]:
+					moved = true
 	
 	if moved:
 		await get_tree().create_timer(ANIMATION_DURATION).timeout
