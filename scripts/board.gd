@@ -87,11 +87,7 @@ func spawn_tile():
 	tiles_container.add_child(tile)
 	
 	# Spawn animation
-	tile.scale = Vector2.ZERO
-	var tween = create_tween()
-	tween.set_ease(Tween.EASE_OUT_BACK)
-	tween.set_trans(Tween.TRANS_ELASTIC)
-	tween.tween_property(tile, "scale", Vector2.ONE, 0.3)
+	tile.play_spawn_effect()
 
 func move(direction: Vector2i) -> bool:
 	if not animation_finished:
@@ -107,46 +103,52 @@ func move(direction: Vector2i) -> bool:
 		for y in range(GRID_SIZE):
 			new_grid[x].append(grid[x][y])
 	
-	var merges = []
-	var movements = []
-	
 	if direction == Vector2i.LEFT:
 		for y in range(GRID_SIZE):
-			var result = process_line([grid[x][y] for x in range(GRID_SIZE)])
+			var line = []
+			for x in range(GRID_SIZE):
+				line.append(grid[x][y])
+			var result = process_line(line)
 			for x in range(GRID_SIZE):
 				if new_grid[x][y] != result[x]:
 					moved = true
 				new_grid[x][y] = result[x]
 	elif direction == Vector2i.RIGHT:
 		for y in range(GRID_SIZE):
-			var line = [grid[x][y] for x in range(GRID_SIZE)]
+			var line = []
+			for x in range(GRID_SIZE):
+				line.append(grid[x][y])
 			line.reverse()
 			var result = process_line(line)
 			result.reverse()
 			for x in range(GRID_SIZE):
-				if new_grid[x][y] != result[x]:
+				if new_grid[x][y] != result[3-x]:
 					moved = true
-				new_grid[x][y] = result[x]
+				new_grid[x][y] = result[3-x]
 	elif direction == Vector2i.UP:
 		for x in range(GRID_SIZE):
-			var result = process_line([grid[x][y] for y in range(GRID_SIZE)])
+			var line = []
+			for y in range(GRID_SIZE):
+				line.append(grid[x][y])
+			var result = process_line(line)
 			for y in range(GRID_SIZE):
 				if new_grid[x][y] != result[y]:
 					moved = true
 				new_grid[x][y] = result[y]
 	elif direction == Vector2i.DOWN:
 		for x in range(GRID_SIZE):
-			var line = [grid[x][y] for y in range(GRID_SIZE)]
+			var line = []
+			for y in range(GRID_SIZE):
+				line.append(grid[x][y])
 			line.reverse()
 			var result = process_line(line)
 			result.reverse()
 			for y in range(GRID_SIZE):
-				if new_grid[x][y] != result[y]:
+				if new_grid[x][y] != result[3-y]:
 					moved = true
-				new_grid[x][y] = result[y]
+				new_grid[x][y] = result[3-y]
 	
 	if moved:
-		animate_movement(direction)
 		await get_tree().create_timer(ANIMATION_DURATION).timeout
 		
 		# Update grid and spawn new tile
@@ -159,36 +161,30 @@ func move(direction: Vector2i) -> bool:
 
 func process_line(line: Array) -> Array:
 	var result = []
-	var merged = []
+	var non_zero = []
 	
 	# Remove zeros
 	for val in line:
 		if val != 0:
-			result.append(val)
+			non_zero.append(val)
 	
 	# Merge
 	var i = 0
-	while i < result.size():
-		if i + 1 < result.size() and result[i] == result[i + 1]:
-			merged.append(result[i] * 2)
-			last_merge_score += result[i] * 2
+	while i < non_zero.size():
+		if i + 1 < non_zero.size() and non_zero[i] == non_zero[i + 1]:
+			var merged = non_zero[i] * 2
+			result.append(merged)
+			last_merge_score += merged
 			i += 2
 		else:
-			merged.append(result[i])
+			result.append(non_zero[i])
 			i += 1
 	
 	# Pad with zeros
-	while merged.size() < GRID_SIZE:
-		merged.append(0)
+	while result.size() < GRID_SIZE:
+		result.append(0)
 	
-	return merged
-
-func animate_movement(direction: Vector2i):
-	# Simple animation - tiles fade out and new ones fade in
-	for tile in tiles_container.get_children():
-		var tween = create_tween()
-		tween.tween_property(tile, "modulate:a", 0.5, ANIMATION_DURATION / 2)
-		tween.tween_property(tile, "modulate:a", 1.0, ANIMATION_DURATION / 2)
+	return result
 
 func update_tile_positions():
 	# Remove old tiles
