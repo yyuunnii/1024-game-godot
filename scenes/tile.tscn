@@ -1,0 +1,56 @@
+[gd_scene load_steps=3 format=3 uid="uid://tile456"]
+
+[ext_resource type="Script" path="res://scripts/tile.gd" id="1_tile"]
+
+[sub_resource type="StyleBoxFlat" id="1_tile_style"]
+bg_color = Color(0.93, 0.89, 0.85, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[node name="Tile" type="Node2D"]
+script = ExtResource("1_tile")
+
+[node name="Panel" type="Panel" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -40.0
+offset_top = -40.0
+offset_right = 40.0
+offset_bottom = 40.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("1_tile_style")
+
+[node name="Label" type="Label" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 28
+text = "2"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Particles" type="CPUParticles2D" parent="."]
+emitting = false
+amount = 30
+lifetime = 0.6
+one_shot = true
+explosiveness = 1.0
+emission_shape = 1
+emission_sphere_radius = 30.0
+direction = Vector2(0, 0)
+spread = 180.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 50.0
+initial_velocity_max = 150.0
+scale_amount_min = 3.0
+scale_amount_max = 8.0
+color = Color(1, 0.8, 0.4, 1)

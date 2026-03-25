@@ -1,0 +1,52 @@
+[gd_scene load_steps=4 format=3 uid="uid://board123"]
+
+[ext_resource type="Script" path="res://scripts/board.gd" id="1_board"]
+[ext_resource type="PackedScene" uid="uid://tile456" path="res://scenes/tile.tscn" id="2_tile"]
+
+[sub_resource type="StyleBoxFlat" id="1_board_bg"]
+bg_color = Color(0.24, 0.24, 0.28, 1)
+border_width_left = 8
+border_width_top = 8
+border_width_right = 8
+border_width_bottom = 8
+border_color = Color(0.16, 0.16, 0.2, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[node name="Board" type="Node2D"]
+script = ExtResource("1_board")
+tile_scene = ExtResource("2_tile")
+
+[node name="Background" type="Panel" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -200.0
+offset_right = 200.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("1_board_bg")
+
+[node name="GridContainer" type="GridContainer" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -190.0
+offset_top = -190.0
+offset_right = 190.0
+offset_bottom = 190.0
+grow_horizontal = 2
+grow_vertical = 2
+columns = 4
+
+[node name="Tiles" type="Node2D" parent="."]
+
+[node name="Effects" type="Node2D" parent="."]
