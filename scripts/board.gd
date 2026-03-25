@@ -120,11 +120,10 @@ func move(direction: Vector2i) -> bool:
 				line.append(grid[x][y])
 			line.reverse()
 			var result = process_line(line)
-			result.reverse()
 			for x in range(GRID_SIZE):
-				if new_grid[x][y] != result[3-x]:
+				if new_grid[3-x][y] != result[x]:
 					moved = true
-				new_grid[x][y] = result[3-x]
+				new_grid[3-x][y] = result[x]
 	elif direction == Vector2i.UP:
 		for x in range(GRID_SIZE):
 			var line = []
@@ -142,11 +141,10 @@ func move(direction: Vector2i) -> bool:
 				line.append(grid[x][y])
 			line.reverse()
 			var result = process_line(line)
-			result.reverse()
 			for y in range(GRID_SIZE):
-				if new_grid[x][y] != result[3-y]:
+				if new_grid[x][3-y] != result[y]:
 					moved = true
-				new_grid[x][y] = result[3-y]
+				new_grid[x][3-y] = result[y]
 	
 	if moved:
 		await get_tree().create_timer(ANIMATION_DURATION).timeout
