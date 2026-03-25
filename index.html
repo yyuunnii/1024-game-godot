@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1024 Game - Godot Style</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        h1 {
+            color: white;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        #game-container {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 20px;
+        }
+        #score-board {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            justify-content: center;
+        }
+        .score-box {
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 8px;
+            color: white;
+            font-size: 1.2em;
+        }
+        canvas {
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        #controls {
+            margin-top: 15px;
+            color: rgba(255,255,255,0.8);
+            text-align: center;
+        }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            animation: popIn 0.3s ease-out;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            80% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .modal h2 {
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+        .modal button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .modal button:hover {
+            transform: scale(1.05);
+        }
+        .win { color: #4caf50; }
+        .lose { color: #f44336; }
+    </style>
+</head>
+<body>
+    <h1>1024</h1>
+    <div id="game-container">
+        <div id="score-board">
+            <div class="score-box">Score: <span id="score">0</span></div>
+            <div class="score-box">Best: <span id="best">0</span></div>
+        </div>
+        <canvas id="game" width="400" height="400"></canvas>
+    </div>
+    <div id="controls">Arrow keys / WASD to move • R to restart</div>
+
+    <div id="gameOverModal" class="modal">
+        <div class="modal-content">
+            <h2 class="lose">Game Over!</h2>
+            <p>Final Score: <span id="finalScore">0</span></p>
+            <button onclick="game.restart()">Try Again</button>
+        </div>
+    </div>
+
+    <div id="winModal" class="modal">
+        <div class="modal-content">
+            <h2 class="win">You Win!</h2>
+            <p>You reached 1024!</p>
+            <button onclick="game.continueGame()">Continue</button>
+        </div>
+    </div>
+
+<script>
+// Godot-style Tween system
+class Tween {
+    constructor(target) {
+        this.target = target;
+        this.animations = [];
+        this.running = false;
+    }
+    
+    property(obj, prop, endValue, duration) {
+        const startValue = obj[prop];
+        const startTime = performance.now();
+        
+        this.animations.push({
+            obj, prop, startValue, endValue,
+            startTime, duration,
+            ease: this.easeFunc || (t => t)
+        });
+        return this;
+    }
+    
+    setEase(func) {
+        this.easeFunc = func;
+        return this;
+    }
+    
+    update() {
+        const now = performance.now();
+        this.animations = this.animations.filter(anim => {
+            const elapsed = (now - anim.startTime) / 1000;
+            const progress = Math.min(elapsed / anim.duration, 1);
+            const eased = anim.ease(progress);
+            
+            if (typeof anim.startValue === 'number') {
+                anim.obj[anim.prop] = anim.startValue + (anim.endValue - anim.startValue) * eased;
+            } else if (anim.startValue.x !== undefined) {
+                // Vector2
+                anim.obj[anim.prop] = {
+                    x: anim.startValue.x + (anim.endValue.x - anim.startValue.x) * eased,
+                    y: anim.startValue.y + (anim.endValue.y - anim.startValue.y) * eased
+                };
+            }
+            
+            return progress < 1;
+        });
+        return this.animations.length > 0;
+    }
+}
+
+// Easing functions (Godot style)
+Tween.EASE_OUT_BACK = t => {
+    const c1 = 1.70158;
+    const c3 = c1 + 1;
+    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+};
+Tween.EASE_OUT_ELASTIC = t => {
+    const c4 = (2 * Math.PI) / 3;
+    if (t === 0) return 0;
+    if (t === 1) return 1;
+    return Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * c4) + 1;
+};
+
+// Tile class (Godot Node2D style)
+class Tile {
+    constructor(value, x, y) {
+        this.value = value;
+        this.x = x;
+        this.y = y;
+        this.pos = { x: 50 + x * 100, y: 50 + y * 100 };
+        this.scale = { x: 0, y: 0 };
+        this.targetScale = { x: 1, y: 1 };
+        this.targetPos = { ...this.pos };
+        this.merged = false;
+        this.tween = null;
+        
+        // Colors
+        this.colors = {
+            2: '#eee4da', 4: '#ede0c8', 8: '#f2b179', 16: '#f59563',
+            32: '#f67c5f', 64: '#f65e3b', 128: '#edcf72', 256: '#edcc61',
+            512: '#edc850', 1024: '#edc53f', 2048: '#edc22e'
+        };
+        this.textColors = {
+            2: '#776e65', 4: '#776e65'
+        };
+        
+        // Spawn animation
+        this.spawn();
+    }
+    
+    spawn() {
+        this.tween = new Tween(this);
+        this.tween.setEase(Tween.EASE_OUT_BACK);
+        this.tween.property(this, 'scale', { x: 1, y: 1 }, 0.3);
+    }
+    
+    moveTo(x, y) {
+        this.x = x;
+        this.y = y;
+        this.targetPos = { x: 50 + x * 100, y: 50 + y * 100 };
+        this.tween = new Tween(this);
+        this.tween.property(this, 'pos', this.targetPos, 0.15);
+    }
+    
+    merge() {
+        this.merged = true;
+        this.tween = new Tween(this);
+        this.tween.setEase(Tween.EASE_OUT_BACK);
+        this.tween.property(this, 'scale', { x: 1.2, y: 1.2 }, 0.1);
+        setTimeout(() => {
+            this.tween = new Tween(this);
+            this.tween.property(this, 'scale', { x: 1, y: 1 }, 0.15);
+        }, 100);
+    }
+    
+    update() {
+        if (this.tween) {
+            this.tween.update();
+        }
+    }
+    
+    draw(ctx) {
+        const size = 90 * this.scale.x;
+        const offset = (90 - size) / 2;
+        
+        ctx.save();
+        ctx.translate(this.pos.x + offset, this.pos.y + offset);
+        
+        // Shadow
+        ctx.shadowColor = 'rgba(0,0,0,0.2)';
+        ctx.shadowBlur = 10;
+        
+        // Background
+        ctx.fillStyle = this.colors[this.value] || '#edc22e';
+        ctx.beginPath();
+        ctx.roundRect(0, 0, size, size, 8 * this.scale.x);
+        ctx.fill();
+        
+        ctx.shadowBlur = 0;
+        
+        //
