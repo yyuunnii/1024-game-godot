@@ -1,10 +1,16 @@
 extends Node2D
 
-@onready var panel = $Panel
-@onready var label = $Panel/Label
-@onready var particles = $Particles
+@onready var panel: Panel
+@onready var label: Label
+@onready var particles: CPUParticles2D
 
 var value: int = 2
+
+func _ready():
+	panel = $Panel
+	label = $Panel/Label
+	particles = $Particles
+	update_appearance()
 
 # Colors for different values
 var colors = {
@@ -29,9 +35,13 @@ var text_colors = {
 func setup(tile_value: int, pos: Vector2):
 	value = tile_value
 	position = pos
-	update_appearance()
+	# Defer appearance update to ensure nodes are ready
+	call_deferred("update_appearance")
 
 func update_appearance():
+	# Ensure label is available
+	if label == null:
+		label = $Panel/Label
 	label.text = str(value)
 	
 	# Set background color
