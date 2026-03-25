@@ -74,7 +74,8 @@ func check_win():
 		# Animate win panel
 		win_panel.scale = Vector2.ZERO
 		var tween = create_tween()
-		tween.set_ease(Tween.EASE_OUT_BACK)
+		tween.set_ease(Tween.EASE_OUT)
+		tween.set_trans(Tween.TRANS_BACK)
 		tween.tween_property(win_panel, "scale", Vector2.ONE, 0.5)
 
 func check_game_over():
@@ -86,7 +87,8 @@ func check_game_over():
 		# Animate game over panel
 		game_over_panel.scale = Vector2.ZERO
 		var tween = create_tween()
-		tween.set_ease(Tween.EASE_OUT_BACK)
+		tween.set_ease(Tween.EASE_OUT)
+		tween.set_trans(Tween.TRANS_BACK)
 		tween.tween_property(game_over_panel, "scale", Vector2.ONE, 0.5)
 		
 		if score > best_score:

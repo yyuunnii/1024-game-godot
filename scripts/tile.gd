@@ -55,8 +55,8 @@ func update_appearance():
 func play_merge_effect():
 	# Scale bounce
 	var tween = create_tween()
-	tween.set_ease(Tween.EASE_OUT_BACK)
-	tween.set_trans(Tween.TRANS_ELASTIC)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.set_trans(Tween.TRANS_BACK)
 	tween.tween_property(self, "scale", Vector2(1.2, 1.2), 0.1)
 	tween.tween_property(self, "scale", Vector2.ONE, 0.15)
 	
@@ -75,6 +75,6 @@ func play_merge_effect():
 func play_spawn_effect():
 	scale = Vector2.ZERO
 	var tween = create_tween()
-	tween.set_ease(Tween.EASE_OUT_BACK)
-	tween.set_trans(Tween.TRANS_ELASTIC)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.set_trans(Tween.TRANS_BACK)
 	tween.tween_property(self, "scale", Vector2.ONE, 0.3)
